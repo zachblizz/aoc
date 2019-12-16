@@ -10,6 +10,8 @@ type point struct {
 	y int
 }
 
+// TODO: might want to make a map of all points,
+// rather than a map of just the points that are created...
 func constructPoints(wire []string) (map[string]point, []string) {
 	wireMap := make(map[string]point)
 	order := []string{}
