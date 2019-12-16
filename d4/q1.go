@@ -27,9 +27,9 @@ func getNumOfDiffs(max, count int, curr []string) int {
 		c, _ := strconv.Atoi(string(n))
 
 		if c < prev {
+			// if this happens mark the rest as prev...
 			curr[i+1] = strconv.Itoa(prev)
 		} else {
-			getPrev = false
 			prev = c
 		}
 	}
