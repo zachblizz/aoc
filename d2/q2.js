@@ -26,9 +26,7 @@ function doInstructions(input, stopCode) {
       tmpInput[2] = verb;
       
       const output = basicIntCodeComp(tmpInput)[0];
-      console.log(output);
       if (output === stopCode) {
-        console.log(noun, verb);
         return 100 * noun + verb;
       }
     }
@@ -36,5 +34,4 @@ function doInstructions(input, stopCode) {
 
 }
 
-console.log(input.length);
 console.log(doInstructions(input, 19690720));

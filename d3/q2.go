@@ -8,11 +8,17 @@ import (
 )
 
 type point struct {
-	x int
-	y int
+	x     int
+	y     int
+	steps int
 }
 
-func constructPointMap(wire []string, i, x, y int, pMap map[string]point) {
+func putPointInMap(x, y, steps int, pMap map[string]point) {
+	key := strconv.Itoa(x) + "," + strconv.Itoa(y)
+	pMap[key] = point{x, y, steps}
+}
+
+func constructPointMap(wire []string, i, x, y, steps int, pMap map[string]point) {
 	if i >= len(wire) {
 		return
 	}
@@ -21,16 +27,15 @@ func constructPointMap(wire []string, i, x, y int, pMap map[string]point) {
 	dir := string(dirDist[0])
 	dist, _ := strconv.Atoi(dirDist[1:len(dirDist)])
 
-	getAllPointsFromCurrPoint(&x, &y, dist, dir, pMap)
+	getAllPointsFromCurrPoint(&x, &y, &steps, dist, dir, pMap)
+	putPointInMap(x, y, steps, pMap)
 
-	key := strconv.Itoa(x) + "," + strconv.Itoa(y)
-	pMap[key] = point{x, y}
 	i++
 
-	constructPointMap(wire, i, x, y, pMap)
+	constructPointMap(wire, i, x, y, steps, pMap)
 }
 
-func getAllPointsFromCurrPoint(x, y *int, dist int, dir string, pMap map[string]point) {
+func getAllPointsFromCurrPoint(x, y, steps *int, dist int, dir string, pMap map[string]point) {
 	for i := 0; i < dist; i++ {
 		switch dir {
 		case "U":
@@ -50,8 +55,9 @@ func getAllPointsFromCurrPoint(x, y *int, dist int, dir string, pMap map[string]
 			return
 		}
 
-		key := strconv.Itoa(*x) + "," + strconv.Itoa(*y)
-		pMap[key] = point{*x, *y}
+		*steps++
+
+		putPointInMap(*x, *y, *steps, pMap)
 	}
 }
 
@@ -67,19 +73,27 @@ func main() {
 	w1Pmap := make(map[string]point)
 	w2Pmap := make(map[string]point)
 
-	constructPointMap(w1, 0, 0, 0, w1Pmap)
-	constructPointMap(w2, 0, 0, 0, w2Pmap)
+	constructPointMap(w1, 0, 0, 0, 0, w1Pmap)
+	constructPointMap(w2, 0, 0, 0, 0, w2Pmap)
 
 	closestIntersection := math.MaxFloat64
+	steps := math.MaxInt64
 
-	for key, point := range w1Pmap {
-		if _, ok := w2Pmap[key]; ok {
-			dist := math.Abs(float64(point.x)) + math.Abs(float64(point.y))
+	for key, p := range w1Pmap {
+		if p2, ok := w2Pmap[key]; ok {
+			dist := math.Abs(float64(p.x)) + math.Abs(float64(p.y))
 			if closestIntersection > dist {
+				// fmt.Println(p.steps, p2.steps, p.steps+p2.steps)
+				currSteps := p.steps + p2.steps
+				if steps > currSteps {
+					steps = currSteps
+				}
+
 				closestIntersection = dist
 			}
 		}
 	}
 
+	fmt.Println(steps)
 	fmt.Println(closestIntersection)
 }
