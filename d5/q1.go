@@ -26,42 +26,28 @@ package main
 //    - getValue 1 0 13933662
 //    - getValue 2 0 69
 //    - setting output value to  13933662
+///                              13933662
 
 import (
-	"bytes"
 	"fmt"
 	"strconv"
 
 )
 
-func one(a, b, pos, _ int, _ *bytes.Buffer, input []int) {
-	fmt.Printf("add %v -> %v\n", a+b, pos)
+func one(a, b, pos, _ int, input []int) {
 	input[pos] = a + b
 }
 
-func two(a, b, pos, _ int, _ *bytes.Buffer, input []int) {
-	fmt.Printf("mult %v -> %v\n", a*b, pos)
+func two(a, b, pos, _ int, input []int) {
 	input[pos] = a * b
 }
 
-func three(pos, _, _, val int, _ *bytes.Buffer, input []int) {
-	fmt.Printf("saving %v @ %v\n", val, pos)
+func three(pos, _, _, val int, input []int) {
 	input[pos] = val
 }
 
-func four(pos, _, _, _ int, output *bytes.Buffer, input []int) {
-	if pos >= 0 && pos < len(input) {
-		val := input[pos]
-
-		if val == 0 {
-			fmt.Println("got a 0")
-		} else {
-			fmt.Printf("-------------------output in pos %v: %v\n\n", pos, val)
-			output.WriteString(strconv.Itoa(val))
-		}
-	} else {
-		fmt.Printf("-------------------no value for %v\n", pos)
-	}
+func four(pos, _, _, _ int, input []int) {
+	fmt.Printf("output: %v\n", pos)
 }
 
 type opMode struct {
@@ -75,7 +61,7 @@ type opMode struct {
 // modes
 // 0 - position
 // 1 - imediate
-func basicIntCodeComp(input []int, opCodes map[string]interface{}, inputVal int, output *bytes.Buffer) []int {
+func basicIntCodeComp(input []int, opCodes map[string]interface{}, inputVal int) []int {
 	for ip := 0; ip < len(input) && input[ip] != 99; {
 		op := input[ip]
 
@@ -96,7 +82,7 @@ func basicIntCodeComp(input []int, opCodes map[string]interface{}, inputVal int,
 					b = input[b]
 				}
 
-				opCodes[opModes.code].(func(int, int, int, int, *bytes.Buffer, []int))(a, b, pos, inputVal, output, input)
+				opCodes[opModes.code].(func(int, int, int, int, []int))(a, b, pos, inputVal, input)
 			}
 
 			ip += opModes.jump
@@ -118,14 +104,14 @@ func getOpModes(op int) opMode {
 	strOp := strconv.Itoa(op)
 	code := opMode{strOp, 0, 0, 0, 2}
 
-	if op >= 1001 {
-		if op < 1000 {
-			strOp = fmt.Sprintf("0%v", op)
-		}
+	if len(strOp) < 4 {
+		strOp = fmt.Sprintf("%04v", op)
+	}
 
-		c := []rune(strOp)
+	c := []rune(strOp)
+	code.code = string(c[2:4])
 
-		code.code = string(c[2:4])
+	if code.code == "01" || code.code == "02" {
 		code.modeOne, _ = strconv.Atoi(string(c[1:2]))
 		code.modeTwo, _ = strconv.Atoi(string(c[0:1]))
 
@@ -141,13 +127,11 @@ func doInstructions(input []int) {
 	opCodes := map[string]interface{}{
 		"01": one,
 		"02": two,
-		"3":  three,
-		"4":  four,
+		"03": three,
+		"04": four,
 	}
 
-	var str bytes.Buffer
-	basicIntCodeComp(input, opCodes, 1, &str)
-	fmt.Println(str.String())
+	basicIntCodeComp(input, opCodes, 1)
 }
 
 func main() {
