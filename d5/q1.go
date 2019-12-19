@@ -1,33 +1,5 @@
 package main
 
-// Output:  0
-// Output:  0
-// Output:  0
-// Output:  0
-// Output:  0
-// Output:  0
-// Output:  0
-// Output:  0
-// Output:  0
-// Output:  13933662
-// opCode 208 102,8,223,223
-//    - getValue 1 1 8
-//    - getValue 2 0 1741707
-//   - add/mul 13933656 223
-//  opCode 212 101,6,224,224
-//    - getValue 1 1 6
-//    - getValue 2 0 0
-//   - add/mul 6 224
-//  opCode 216 1,224,223,223
-//    - getValue 1 0 6
-//    - getValue 2 0 13933656
-//   - add/mul 13933662 223
-//  opCode 220 4,223
-//    - getValue 1 0 13933662
-//    - getValue 2 0 69
-//    - setting output value to  13933662
-///                              13933662
-
 import (
 	"fmt"
 	"strconv"
