@@ -72,23 +72,26 @@ func basicIntCodeComp(input []int, opCodes map[string]interface{}, inputVal int)
 			} else {
 				switch opModes.code {
 				case "05":
-					ip += opModes.jump
 					if a != 0 {
-						ip = b
+						opModes.jump = b - ip
 					}
+
+					ip += opModes.jump
 					break
 				case "06":
-					ip += opModes.jump
 					if a == 0 {
-						ip = b
+						opModes.jump = b - ip
 					}
+
+					ip += opModes.jump
 					break
 				case "07":
 					input[pos] = 0
 					if a < b {
 						input[pos] = 1
 					}
-					ip += 4
+
+					ip += opModes.jump
 					break
 				case "08":
 					if pos < len(input) {
@@ -96,10 +99,9 @@ func basicIntCodeComp(input []int, opCodes map[string]interface{}, inputVal int)
 						if a == b {
 							input[pos] = 1
 						}
-						ip += opModes.jump
-					} else {
-						ip += 2
 					}
+
+					ip += opModes.jump
 					break
 				default:
 					ip++
@@ -122,7 +124,7 @@ func printOpMode(opM opMode, op, ip int, input []int) {
 
 func getOpModes(op int) opMode {
 	strOp := strconv.Itoa(op)
-	code := opMode{strOp, 0, 0, 0, 2}
+	code := opMode{strOp, 0, 0, 0, 3}
 
 	if len(strOp) < 4 {
 		strOp = fmt.Sprintf("%04v", op)
@@ -134,8 +136,10 @@ func getOpModes(op int) opMode {
 	code.modeOne, _ = strconv.Atoi(string(c[1:2]))
 	code.modeTwo, _ = strconv.Atoi(string(c[0:1]))
 
-	if code.code == "01" || code.code == "02" || code.code == "08" {
+	if code.code == "01" || code.code == "02" || code.code == "07" || code.code == "08" {
 		code.jump = 4
+	} else if code.code == "03" || code.code == "04" {
+		code.jump = 2
 	}
 
 	return code
@@ -158,9 +162,9 @@ func main() {
 	// < 8 -> 999
 	// 8 -> 1000
 	// > 8 -> 1001
-	input = []int{3, 21, 1008, 21, 8, 20, 1005, 20, 22, 107, 8, 21, 20, 1006, 20, 31,
-		1106, 0, 36, 98, 0, 0, 1002, 21, 125, 20, 4, 20, 1105, 1, 46, 104,
-		999, 1105, 1, 46, 1101, 1000, 1, 20, 4, 20, 1105, 1, 46, 98, 99}
+	// input = []int{3, 21, 1008, 21, 8, 20, 1005, 20, 22, 107, 8, 21, 20, 1006, 20, 31,
+	// 	1106, 0, 36, 98, 0, 0, 1002, 21, 125, 20, 4, 20, 1105, 1, 46, 104,
+	// 	999, 1105, 1, 46, 1101, 1000, 1, 20, 4, 20, 1105, 1, 46, 98, 99}
 
 	// 0 -> 0
 	// !0 -> 1
