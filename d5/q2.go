@@ -3,146 +3,121 @@ package main
 import (
 	"fmt"
 	"strconv"
-
 )
 
-func one(a, b, pos, _ int, input []int) {
-	input[pos] = a + b
-}
+type programState struct {
+	code string // op code
 
-func two(a, b, pos, _ int, input []int) {
-	input[pos] = a * b
-}
+	sysID int // system check id
 
-func three(pos, _, _, val int, input []int) {
-	input[pos] = val
-}
+	ip int // instruction pointer
+	p1 int
+	p2 int
+	p3 int
 
-func four(pos, _, _, _ int, input []int) {
-	if pos < len(input) {
-		fmt.Printf("val @%v is %v\n", pos, input[pos])
-	} else {
-		fmt.Printf("@ pos %v\n", pos)
-	}
-}
-
-type opMode struct {
-	code      string
 	modeOne   int
 	modeTwo   int
 	modeThree int
-	jump      int
+
+	jump int
+}
+
+func one(state *programState, input []int) {
+	input[state.p3] = state.p1 + state.p2
+	state.ip += state.jump
+}
+
+func two(state *programState, input []int) {
+	input[state.p3] = state.p1 * state.p2
+	state.ip += state.jump
+}
+
+func three(state *programState, input []int) {
+	input[state.p1] = state.sysID
+	state.ip += state.jump
+}
+
+func four(state *programState, input []int) {
+	if state.p1 < len(input) {
+		fmt.Printf("val @%v is %v\n", state.p1, input[state.p1])
+	} else {
+		fmt.Printf("@ pos %v\n", state.p1)
+	}
+	state.ip += state.jump
 }
 
 // modes
 // 0 - position
 // 1 - imediate
-func basicIntCodeComp(input []int, opCodes map[string]interface{}, inputVal int) []int {
-	for ip := 0; ip < len(input) && input[ip] != 99; {
-		op := input[ip]
+func runInstructions(input []int, opCodes map[string]interface{}, state programState) []int {
+	for state.ip < len(input) && input[state.ip] != 99 {
+		op := input[state.ip]
+		getCurrState(op, &state, input)
 
-		if op != 99 {
-			opModes := getOpModes(op)
-			var a, b, pos int
-
-			if opModes.code != "09" {
-				a = input[ip+1] // imidiate mode assumed
-
-				if opModes.code != "03" {
-					b = input[ip+2]
-				}
-
-				if opModes.code == "01" || opModes.code == "02" || opModes.code == "07" || opModes.code == "08" {
-					pos = input[ip+3]
-				}
-			}
-
-			// printOpMode(opModes, op, ip, input)
-			if opModes.modeOne == 0 && opModes.code != "03" && opModes.code != "04" && a < len(input) { // position mode swap
-				a = input[a]
-			}
-
-			if opModes.modeTwo == 0 && b < len(input) {
-				b = input[b]
-			}
-
-			if _, ok := opCodes[opModes.code]; ok {
-				opCodes[opModes.code].(func(int, int, int, int, []int))(a, b, pos, inputVal, input)
-				ip += opModes.jump
-			} else {
-				switch opModes.code {
-				case "05":
-					if a != 0 {
-						opModes.jump = b - ip
-					}
-
-					ip += opModes.jump
-					break
-				case "06":
-					if a == 0 {
-						opModes.jump = b - ip
-					}
-
-					ip += opModes.jump
-					break
-				case "07":
-					input[pos] = 0
-					if a < b {
-						input[pos] = 1
-					}
-
-					ip += opModes.jump
-					break
-				case "08":
-					if pos < len(input) {
-						input[pos] = 0
-						if a == b {
-							input[pos] = 1
-						}
-					}
-
-					ip += opModes.jump
-					break
-				default:
-					ip++
-					break
-				}
-			}
+		if _, ok := opCodes[state.code]; ok {
+			opCodes[state.code].(func(*programState, []int))(&state, input)
 		} else {
-			break
+			state.ip++
 		}
 	}
 
 	return input
 }
 
-func printOpMode(opM opMode, op, ip int, input []int) {
-	fmt.Printf("orig code: %v; op: %v; m1: %v; m2: %v; m3: %v; jmp: %v\n",
-		op, opM.code, opM.modeOne, opM.modeTwo, opM.modeThree, opM.jump)
-	fmt.Println(input[ip], input[ip+1], input[ip+2], input[ip+3])
+func clearState(s *programState) {
+	s.p1 = 0
+	s.p2 = 0
+	s.p3 = 0
+	s.modeOne = 0
+	s.modeTwo = 0
+	s.modeThree = 0
+	s.jump = 3
 }
 
-func getOpModes(op int) opMode {
+func getCurrState(op int, state *programState, input []int) {
 	strOp := strconv.Itoa(op)
-	code := opMode{strOp, 0, 0, 0, 3}
+	clearState(state)
 
 	if len(strOp) < 4 {
 		strOp = fmt.Sprintf("%04v", op)
 	}
 
 	c := []rune(strOp)
-	code.code = string(c[2:4])
+	state.code = string(c[2:4])
 
-	code.modeOne, _ = strconv.Atoi(string(c[1:2]))
-	code.modeTwo, _ = strconv.Atoi(string(c[0:1]))
+	state.modeOne, _ = strconv.Atoi(string(c[1:2]))
+	state.modeTwo, _ = strconv.Atoi(string(c[0:1]))
 
-	if code.code == "01" || code.code == "02" || code.code == "07" || code.code == "08" {
-		code.jump = 4
-	} else if code.code == "03" || code.code == "04" {
-		code.jump = 2
+	if state.code == "01" || state.code == "02" || state.code == "07" || state.code == "08" {
+		state.jump = 4
+	} else if state.code == "03" || state.code == "04" {
+		state.jump = 2
 	}
 
-	return code
+	getParams(state, input)
+}
+
+func getParams(state *programState, input []int) {
+	if state.code != "09" {
+		state.p1 = input[state.ip+1] // imidiate mode assumed
+
+		if state.code != "03" {
+			state.p2 = input[state.ip+2]
+		}
+
+		if state.code == "01" || state.code == "02" || state.code == "07" || state.code == "08" {
+			state.p3 = input[state.ip+3]
+		}
+	}
+
+	// position mode swap
+	if state.modeOne == 0 && state.code != "03" && state.code != "04" && state.p1 < len(input) {
+		state.p1 = input[state.p1]
+	}
+
+	if state.modeTwo == 0 && state.p2 < len(input) {
+		state.p2 = input[state.p2]
+	}
 }
 
 func doInstructions(input []int, inputVal int) {
@@ -151,9 +126,41 @@ func doInstructions(input []int, inputVal int) {
 		"02": two,
 		"03": three,
 		"04": four,
+		"05": func(state *programState, _ []int) {
+			if state.p1 != 0 {
+				state.jump = state.p2 - state.ip
+			}
+			state.ip += state.jump
+		},
+		"06": func(state *programState, _ []int) {
+			if state.p1 == 0 {
+				state.jump = state.p2 - state.ip
+			}
+			state.ip += state.jump
+		},
+		"07": func(state *programState, input []int) {
+			input[state.p3] = 0
+			if state.p1 < state.p2 {
+				input[state.p3] = 1
+			}
+			state.ip += state.jump
+		},
+		"08": func(state *programState, input []int) {
+			if state.p3 < len(input) {
+				input[state.p3] = 0
+				if state.p1 == state.p2 {
+					input[state.p3] = 1
+				}
+			}
+			state.ip += state.jump
+		},
 	}
 
-	basicIntCodeComp(input, opCodes, inputVal)
+	var state programState
+	state.sysID = inputVal
+	state.jump = 3
+
+	runInstructions(input, opCodes, state)
 }
 
 func main() {
@@ -177,5 +184,5 @@ func main() {
 	// input = []int{3, 3, 1108, -1, 8, 3, 4, 3, 99} // if input == 8 -> 1 else -> 0
 	// input = []int{3, 3, 1107, -1, 8, 3, 4, 3, 99} // if input < 8 -> 1; else -> 0
 
-	doInstructions(input, 5)
+	doInstructions(input, 1)
 }
