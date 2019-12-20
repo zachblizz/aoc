@@ -25,12 +25,8 @@ func getNumOfOrbits(orbits []string) {
 
 // TODO: look into this...
 func countOrbits(orbitMap map[string][]string, pp string, count int) int {
-	if _, ok := orbitMap[pp]; !ok {
-		return count + 1
-	}
-
-	for _, p := range orbitMap[pp] {
-		count = countOrbits(orbitMap, p, count) + 1
+	for i, p := range orbitMap[pp] {
+		count = countOrbits(orbitMap, p, count+1) + i
 	}
 
 	return count + 1
