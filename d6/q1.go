@@ -8,14 +8,13 @@ import (
 func getNumOfOrbits(orbits []string) {
 	orbitMap := make(map[string][]string)
 	orbitCount := make(map[string]int)
-	orbitsCount := 1
 
 	for _, orb := range orbits {
 		planets := strings.Split(orb, ")")
 		a, b := planets[0], planets[1]
 
 		orbitCount[a]++
-		insertPlanet(orbitMap, orbitCount[a], &orbitsCount, a, b)
+		insertPlanet(orbitMap, orbitCount[a], a, b)
 	}
 	fmt.Println(orbitMap)
 	// fmt.Println(orbitsCount)
@@ -25,26 +24,27 @@ func getNumOfOrbits(orbits []string) {
 
 // TODO: look into this...
 func countOrbits(orbitMap map[string][]string, pp string, count int) int {
-	for i, p := range orbitMap[pp] {
-		count = countOrbits(orbitMap, p, count+1) + i
+	if _, ok := orbitMap[pp]; !ok {
+		return 0
+	}
+
+	for _, p := range orbitMap[pp] {
+		count++
+		count += countOrbits(orbitMap, p, count)
 	}
 
 	return count + 1
 }
 
-func insertPlanet(orbitMap map[string][]string, seenCount int, orbitsCount *int, a, b string) {
+func insertPlanet(orbitMap map[string][]string, seenCount int, a, b string) {
 	if len(orbitMap) == 0 { // initial orbit
-		*orbitsCount++
 		orbitMap[a] = []string{b}
 	} else {
 		newOrbit := true
 		for p, orbits := range orbitMap {
-			pCounter := 1
 			for _, sp := range orbits {
-				pCounter++
 				if sp == a && seenCount == 1 {
 					newOrbit = false
-					*orbitsCount += pCounter + len(orbitMap[p])
 					orbitMap[p] = append(orbitMap[p], b)
 					break
 				}
@@ -56,12 +56,6 @@ func insertPlanet(orbitMap map[string][]string, seenCount int, orbitsCount *int,
 		}
 
 		if newOrbit { // new orbit branch
-			pCounter := 0
-			if _, ok := orbitMap["COM"]; ok {
-				for ; pCounter < len(orbitMap["COM"]) && orbitMap["COM"][pCounter] != a; pCounter++ {
-				}
-			}
-			*orbitsCount += pCounter
 			orbitMap[a] = []string{b}
 		}
 	}
