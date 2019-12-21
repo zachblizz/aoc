@@ -19,6 +19,7 @@ func getNumOfOrbits(orbits []string) {
 	fmt.Println(orbitMap)
 	// fmt.Println(orbitsCount)
 	// printOrbits(orbitMap)
+	// v := make(map[string])
 	fmt.Println(countOrbits(orbitMap, "COM", 0))
 }
 
