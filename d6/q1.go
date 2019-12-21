@@ -7,68 +7,38 @@ import (
 
 func getNumOfOrbits(orbits []string) {
 	orbitMap := make(map[string][]string)
-	orbitCount := make(map[string]int)
 
 	for _, orb := range orbits {
 		planets := strings.Split(orb, ")")
 		a, b := planets[0], planets[1]
 
-		orbitCount[a]++
-		insertPlanet(orbitMap, orbitCount[a], a, b)
-	}
-	fmt.Println(orbitMap)
-	// fmt.Println(orbitsCount)
-	// printOrbits(orbitMap)
-	// v := make(map[string])
-	fmt.Println(countOrbits(orbitMap, "COM", 0))
-}
-
-// TODO: look into this...
-func countOrbits(orbitMap map[string][]string, pp string, count int) int {
-	if _, ok := orbitMap[pp]; !ok {
-		return 0
-	}
-
-	for _, p := range orbitMap[pp] {
-		count++
-		count += countOrbits(orbitMap, p, count)
-	}
-
-	return count + 1
-}
-
-func insertPlanet(orbitMap map[string][]string, seenCount int, a, b string) {
-	if len(orbitMap) == 0 { // initial orbit
-		orbitMap[a] = []string{b}
-	} else {
-		newOrbit := true
-		for p, orbits := range orbitMap {
-			for _, sp := range orbits {
-				if sp == a && seenCount == 1 {
-					newOrbit = false
-					orbitMap[p] = append(orbitMap[p], b)
-					break
-				}
-			}
-
-			if !newOrbit {
-				break
-			}
-		}
-
-		if newOrbit { // new orbit branch
+		if _, ok := orbitMap[a]; !ok {
 			orbitMap[a] = []string{b}
+		} else {
+			orbitMap[a] = append(orbitMap[a], b)
 		}
 	}
+
+	v := make(map[string]int)
+	depthCount := 0
+	countOrbits(orbitMap, orbitMap["COM"], 0, &depthCount, v)
+	fmt.Println(depthCount)
 }
 
-func printOrbits(orbs map[string][]string) {
-	for k, v := range orbs {
-		fmt.Printf("%v->", k)
-		for _, p := range v {
-			fmt.Printf("%v->", p)
+func countOrbits(orbitMap map[string][]string, orbit []string, count int, depthCount *int, v map[string]int) {
+	if len(orbit) == 0 {
+		return
+	}
+
+	count++
+	for _, p := range orbit {
+		if _, ok := v[p]; ok {
+			return
 		}
-		fmt.Println()
+
+		v[p] = 1
+		*depthCount += count
+		countOrbits(orbitMap, orbitMap[p], count, depthCount, v)
 	}
 }
 
@@ -79,7 +49,8 @@ func getInput() []string {
 func main() {
 	orbits := []string{"COM)B", "B)C", "C)D", "D)E", "E)F", "B)G", "G)H", "D)I", "E)J", "J)K", "K)L"}
 
-	// orbits = getInput()
+	// orig - 140608
+	orbits = getInput()
 
 	getNumOfOrbits(orbits)
 }
