@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+
 )
 
 func getNumOfOrbits(orbits []string) {
@@ -22,7 +23,86 @@ func getNumOfOrbits(orbits []string) {
 	v := make(map[string]int)
 	depthCount := 0
 	countOrbits(orbitMap, orbitMap["COM"], 0, &depthCount, v)
+
 	fmt.Println(depthCount)
+	// fmt.Println(orbitMap)
+
+	youTrace := []string{}
+	sanTrace := []string{}
+
+	getOrbitTrace(orbitMap, "YOU", &youTrace)
+	getOrbitTrace(orbitMap, "SAN", &sanTrace)
+	fmt.Println(getOrbitalTransfers(youTrace, sanTrace))
+}
+
+func getOrbitalTransfers(youTrace, sanTrace []string) int {
+	transfers := 0
+
+	if len(youTrace) > len(sanTrace) {
+		transfers = transferHelper(youTrace, sanTrace)
+	} else {
+		transfers = transferHelper(sanTrace, youTrace)
+	}
+
+	return transfers
+}
+
+func transferHelper(a, b []string) int {
+	foundCommon := ""
+	transfers := 0
+
+	for _, yp := range a {
+		for _, sp := range b {
+			if yp == sp {
+				fmt.Println("common parent", sp)
+				foundCommon = yp
+				break
+			}
+		}
+
+		if foundCommon != "" {
+			break
+		}
+	}
+
+	for _, p := range a {
+		if p != foundCommon {
+			transfers++
+		} else {
+			break
+		}
+	}
+
+	for _, p := range b {
+		if p != foundCommon {
+			transfers++
+		} else {
+			break
+		}
+	}
+
+	return transfers
+}
+
+func getOrbitTrace(orbitMap map[string][]string, find string, orbitTrace *[]string) {
+	parent := ""
+	for pp, orbits := range orbitMap {
+		for _, p := range orbits {
+			if p == find {
+				parent = pp
+				*orbitTrace = append(*orbitTrace, pp)
+				break
+			}
+		}
+
+		if parent != "" {
+			break
+		}
+	}
+
+	if parent != "COM" {
+		getOrbitTrace(orbitMap, parent, orbitTrace)
+	}
 }
 
 func countOrbits(orbitMap map[string][]string, orbit []string, count int, depthCount *int, v map[string]int) {
@@ -47,9 +127,9 @@ func getInput() []string {
 }
 
 func main() {
-	orbits := []string{"COM)B", "B)C", "C)D", "D)E", "E)F", "B)G", "G)H", "D)I", "E)J", "J)K", "K)L"}
+	orbits := []string{"COM)B", "B)C", "C)D", "D)E", "E)F", "B)G", "G)H", "D)I", "E)J", "J)K", "K)L", "K)YOU", "I)SAN"}
 
-	// orig - 140608
+	// orig - 140608, 337...
 	orbits = getInput()
 
 	getNumOfOrbits(orbits)
