@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"strconv"
 
@@ -9,7 +10,8 @@ import (
 type programState struct {
 	code string // op code
 
-	sysID int // system check id
+	sysID    []int // system check id
+	sysIDptr int
 
 	ip int // instruction pointer
 	p1 int
@@ -20,7 +22,8 @@ type programState struct {
 	modeTwo   int
 	modeThree int
 
-	jump int
+	jump   int
+	output int
 }
 
 func one(state *programState, input []int) {
@@ -34,15 +37,17 @@ func two(state *programState, input []int) {
 }
 
 func three(state *programState, input []int) {
-	input[state.p1] = state.sysID
+	input[state.p1] = state.sysID[state.sysIDptr]
+	state.sysIDptr++
 	state.ip += state.jump
 }
 
 func four(state *programState, input []int) {
 	if state.p1 < len(input) {
-		fmt.Printf("val @%v is %v\n", state.p1, input[state.p1])
+		state.output = input[state.p1]
 	} else {
-		fmt.Printf("@ pos %v\n", state.p1)
+		fmt.Printf("oob error... @ pos %v\n", state.p1)
+		state.output = state.p1
 	}
 	state.ip += state.jump
 }
@@ -50,22 +55,23 @@ func four(state *programState, input []int) {
 // modes
 // 0 - position
 // 1 - imediate
-func runInstructions(input []int, opCodes map[string]interface{}, state programState) []int {
+func runInstructions(input []int, opCodes map[string]interface{}, state *programState) int {
+	var output int
 	for state.ip < len(input) && input[state.ip] != 99 {
 		op := input[state.ip]
-		getCurrState(op, &state, input)
+		getCurrState(op, state, input)
 
 		if _, ok := opCodes[state.code]; ok {
-			opCodes[state.code].(func(*programState, []int))(&state, input)
+			opCodes[state.code].(func(*programState, []int))(state, input)
 		} else {
 			state.ip++
 		}
 	}
 
-	return input
+	return output
 }
 
-func clearState(s *programState) {
+func clearStateModeAndParams(s *programState) {
 	s.p1 = 0
 	s.p2 = 0
 	s.p3 = 0
@@ -75,9 +81,15 @@ func clearState(s *programState) {
 	s.jump = 3
 }
 
+func resetState(s *programState) {
+	clearStateModeAndParams(s)
+	s.ip = 0
+	s.sysIDptr = 0
+}
+
 func getCurrState(op int, state *programState, input []int) {
 	strOp := strconv.Itoa(op)
-	clearState(state)
+	clearStateModeAndParams(state)
 
 	if len(strOp) < 4 {
 		strOp = fmt.Sprintf("%04v", op)
@@ -121,7 +133,7 @@ func getParams(state *programState, input []int) {
 	}
 }
 
-func doInstructions(input []int, inputVal int) {
+func doInstructions(input []int, state *programState) {
 	opCodes := map[string]interface{}{
 		"01": one,
 		"02": two,
@@ -157,22 +169,73 @@ func doInstructions(input []int, inputVal int) {
 		},
 	}
 
-	var state programState
-	state.sysID = inputVal
-	state.jump = 3
-
 	runInstructions(input, opCodes, state)
 }
 
+func scrambleSeq(s []int, i int) []int {
+	if i+1 >= len(s) {
+		return nil
+	}
+
+	swap := s[i+1]
+
+	s[i+1] = s[i]
+	s[i] = swap
+
+	return s
+}
+
+func swapIndecies(s []int, i, j int) []int {
+	swap := s[i]
+
+	s[i] = s[j]
+	s[j] = swap
+
+	return s
+}
+
+func getSeqKey(sequence []int) string {
+	var key bytes.Buffer
+	for j := 0; j < len(sequence); j++ {
+		key.WriteString(strconv.Itoa(sequence[j]))
+	}
+	return key.String()
+}
+
+func getSequences(sequence []int) [][]int {
+	var sequences [][]int
+	seqMap := make(map[string][]int)
+
+	for _, seq := range seqMap {
+		sequences = append(sequences, seq)
+	}
+
+	return sequences
+}
+
 func main() {
-	input := []int{3, 225, 1, 225, 6, 6, 1100, 1, 238, 225, 104, 0, 1102, 91, 92, 225, 1102, 85, 13, 225, 1, 47, 17, 224, 101, -176, 224, 224, 4, 224, 1002, 223, 8, 223, 1001, 224, 7, 224, 1, 223, 224, 223, 1102, 79, 43, 225, 1102, 91, 79, 225, 1101, 94, 61, 225, 1002, 99, 42, 224, 1001, 224, -1890, 224, 4, 224, 1002, 223, 8, 223, 1001, 224, 6, 224, 1, 224, 223, 223, 102, 77, 52, 224, 1001, 224, -4697, 224, 4, 224, 102, 8, 223, 223, 1001, 224, 7, 224, 1, 224, 223, 223, 1101, 45, 47, 225, 1001, 43, 93, 224, 1001, 224, -172, 224, 4, 224, 102, 8, 223, 223, 1001, 224, 1, 224, 1, 224, 223, 223, 1102, 53, 88, 225, 1101, 64, 75, 225, 2, 14, 129, 224, 101, -5888, 224, 224, 4, 224, 102, 8, 223, 223, 101, 6, 224, 224, 1, 223, 224, 223, 101, 60, 126, 224, 101, -148, 224, 224, 4, 224, 1002, 223, 8, 223, 1001, 224, 2, 224, 1, 224, 223, 223, 1102, 82, 56, 224, 1001, 224, -4592, 224, 4, 224, 1002, 223, 8, 223, 101, 4, 224, 224, 1, 224, 223, 223, 1101, 22, 82, 224, 1001, 224, -104, 224, 4, 224, 1002, 223, 8, 223, 101, 4, 224, 224, 1, 223, 224, 223, 4, 223, 99, 0, 0, 0, 677, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1105, 0, 99999, 1105, 227, 247, 1105, 1, 99999, 1005, 227, 99999, 1005, 0, 256, 1105, 1, 99999, 1106, 227, 99999, 1106, 0, 265, 1105, 1, 99999, 1006, 0, 99999, 1006, 227, 274, 1105, 1, 99999, 1105, 1, 280, 1105, 1, 99999, 1, 225, 225, 225, 1101, 294, 0, 0, 105, 1, 0, 1105, 1, 99999, 1106, 0, 300, 1105, 1, 99999, 1, 225, 225, 225, 1101, 314, 0, 0, 106, 0, 0, 1105, 1, 99999, 8, 226, 677, 224, 102, 2, 223, 223, 1005, 224, 329, 1001, 223, 1, 223, 1007, 226, 226, 224, 1002, 223, 2, 223, 1006, 224, 344, 101, 1, 223, 223, 108, 226, 226, 224, 1002, 223, 2, 223, 1006, 224, 359, 1001, 223, 1, 223, 107, 226, 677, 224, 102, 2, 223, 223, 1006, 224, 374, 101, 1, 223, 223, 8, 677, 677, 224, 102, 2, 223, 223, 1006, 224, 389, 1001, 223, 1, 223, 1008, 226, 677, 224, 1002, 223, 2, 223, 1006, 224, 404, 101, 1, 223, 223, 7, 677, 677, 224, 1002, 223, 2, 223, 1005, 224, 419, 101, 1, 223, 223, 1108, 226, 677, 224, 1002, 223, 2, 223, 1005, 224, 434, 101, 1, 223, 223, 1108, 226, 226, 224, 102, 2, 223, 223, 1005, 224, 449, 1001, 223, 1, 223, 107, 226, 226, 224, 102, 2, 223, 223, 1005, 224, 464, 101, 1, 223, 223, 1007, 677, 677, 224, 102, 2, 223, 223, 1006, 224, 479, 101, 1, 223, 223, 1007, 226, 677, 224, 102, 2, 223, 223, 1005, 224, 494, 1001, 223, 1, 223, 1008, 226, 226, 224, 1002, 223, 2, 223, 1005, 224, 509, 1001, 223, 1, 223, 1108, 677, 226, 224, 1002, 223, 2, 223, 1006, 224, 524, 1001, 223, 1, 223, 108, 677, 677, 224, 1002, 223, 2, 223, 1005, 224, 539, 101, 1, 223, 223, 108, 226, 677, 224, 1002, 223, 2, 223, 1005, 224, 554, 101, 1, 223, 223, 1008, 677, 677, 224, 1002, 223, 2, 223, 1006, 224, 569, 1001, 223, 1, 223, 1107, 677, 677, 224, 102, 2, 223, 223, 1005, 224, 584, 1001, 223, 1, 223, 7, 677, 226, 224, 102, 2, 223, 223, 1005, 224, 599, 1001, 223, 1, 223, 8, 677, 226, 224, 1002, 223, 2, 223, 1005, 224, 614, 1001, 223, 1, 223, 7, 226, 677, 224, 1002, 223, 2, 223, 1006, 224, 629, 101, 1, 223, 223, 1107, 677, 226, 224, 1002, 223, 2, 223, 1005, 224, 644, 1001, 223, 1, 223, 1107, 226, 677, 224, 102, 2, 223, 223, 1006, 224, 659, 1001, 223, 1, 223, 107, 677, 677, 224, 1002, 223, 2, 223, 1005, 224, 674, 101, 1, 223, 223, 4, 223, 99, 226}
+	input := []int{3, 8, 1001, 8, 10, 8, 105, 1, 0, 0, 21, 46, 67, 76, 101, 118, 199, 280, 361, 442, 99999, 3, 9, 1002, 9, 4, 9, 1001, 9, 2, 9, 102, 3, 9, 9, 101, 3, 9, 9, 102, 2, 9, 9, 4, 9, 99, 3, 9, 1001, 9, 3, 9, 102, 2, 9, 9, 1001, 9, 2, 9, 1002, 9, 3, 9, 4, 9, 99, 3, 9, 101, 3, 9, 9, 4, 9, 99, 3, 9, 1001, 9, 2, 9, 1002, 9, 5, 9, 101, 5, 9, 9, 1002, 9, 4, 9, 101, 5, 9, 9, 4, 9, 99, 3, 9, 102, 2, 9, 9, 1001, 9, 5, 9, 102, 2, 9, 9, 4, 9, 99, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 99, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 99, 3, 9, 1001, 9, 1, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 1001, 9, 1, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 1001, 9, 1, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 99, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 1001, 9, 1, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 1001, 9, 2, 9, 4, 9, 99, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 1001, 9, 2, 9, 4, 9, 3, 9, 1001, 9, 2, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 99}
 
 	input = []int{3, 15, 3, 16, 1002, 16, 10, 16, 1, 16, 15, 15, 4, 15, 99, 0, 0}
 
-	// 4 -> 44
-	// 44 -> 484
-	// 474 -> 5324
-	input[1] = 4
-	input[2] = 0
-	doInstructions(input, 4)
+	var state programState
+	sequences := getSequences([]int{0, 1, 2, 3, 4})
+
+	for _, seq := range sequences {
+		for i := 0; i < len(seq); i++ {
+			if i == 0 {
+				state.sysID = []int{seq[i], 0}
+			} else {
+				state.sysID = []int{seq[i], state.output}
+			}
+
+			c := make([]int, len(input))
+			copy(c, input)
+
+			resetState(&state)
+			doInstructions(c, &state)
+		}
+
+		fmt.Printf("seq: %v, state.output: %v\n", seq, state.output)
+	}
 }

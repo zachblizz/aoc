@@ -36,45 +36,33 @@ func getNumOfOrbits(orbits []string) {
 }
 
 func getOrbitalTransfers(youTrace, sanTrace []string) int {
+	commonParent := ""
 	transfers := 0
 
-	if len(youTrace) > len(sanTrace) {
-		transfers = transferHelper(youTrace, sanTrace)
-	} else {
-		transfers = transferHelper(sanTrace, youTrace)
-	}
-
-	return transfers
-}
-
-func transferHelper(a, b []string) int {
-	foundCommon := ""
-	transfers := 0
-
-	for _, yp := range a {
-		for _, sp := range b {
+	for _, yp := range youTrace {
+		for _, sp := range sanTrace {
 			if yp == sp {
 				fmt.Println("common parent", sp)
-				foundCommon = yp
+				commonParent = yp
 				break
 			}
 		}
 
-		if foundCommon != "" {
+		if commonParent != "" {
 			break
 		}
 	}
 
-	for _, p := range a {
-		if p != foundCommon {
+	for _, p := range youTrace {
+		if p != commonParent {
 			transfers++
 		} else {
 			break
 		}
 	}
 
-	for _, p := range b {
-		if p != foundCommon {
+	for _, p := range sanTrace {
+		if p != commonParent {
 			transfers++
 		} else {
 			break
