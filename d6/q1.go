@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"strings"
-
 )
 
 func getNumOfOrbits(orbits []string) {
@@ -36,33 +35,45 @@ func getNumOfOrbits(orbits []string) {
 }
 
 func getOrbitalTransfers(youTrace, sanTrace []string) int {
-	commonParent := ""
 	transfers := 0
 
-	for _, yp := range youTrace {
-		for _, sp := range sanTrace {
+	if len(youTrace) > len(sanTrace) {
+		transfers = transferHelper(youTrace, sanTrace)
+	} else {
+		transfers = transferHelper(sanTrace, youTrace)
+	}
+
+	return transfers
+}
+
+func transferHelper(a, b []string) int {
+	foundCommon := ""
+	transfers := 0
+
+	for _, yp := range a {
+		for _, sp := range b {
 			if yp == sp {
 				fmt.Println("common parent", sp)
-				commonParent = yp
+				foundCommon = yp
 				break
 			}
 		}
 
-		if commonParent != "" {
+		if foundCommon != "" {
 			break
 		}
 	}
 
-	for _, p := range youTrace {
-		if p != commonParent {
+	for _, p := range a {
+		if p != foundCommon {
 			transfers++
 		} else {
 			break
 		}
 	}
 
-	for _, p := range sanTrace {
-		if p != commonParent {
+	for _, p := range b {
+		if p != foundCommon {
 			transfers++
 		} else {
 			break

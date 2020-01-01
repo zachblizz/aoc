@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"strconv"
-
 )
 
 type programState struct {
@@ -172,26 +172,11 @@ func doInstructions(input []int, state *programState) {
 	runInstructions(input, opCodes, state)
 }
 
-func scrambleSeq(s []int, i int) []int {
-	if i+1 >= len(s) {
-		return nil
-	}
-
-	swap := s[i+1]
-
-	s[i+1] = s[i]
-	s[i] = swap
-
-	return s
-}
-
-func swapIndecies(s []int, i, j int) []int {
+func swapIndecies(s []int, i, j int) {
 	swap := s[i]
 
 	s[i] = s[j]
 	s[j] = swap
-
-	return s
 }
 
 func getSeqKey(sequence []int) string {
@@ -202,9 +187,32 @@ func getSeqKey(sequence []int) string {
 	return key.String()
 }
 
+// thank you - https://www.codesdope.com/blog/article/generating-permutations-of-all-elements-of-an-arra/
+func getPermutations(s []int, m map[string][]int, start, end int) {
+	if start == end {
+		c := make([]int, len(s))
+		copy(c, s)
+
+		k := getSeqKey(c)
+		m[k] = c
+
+		return
+	}
+
+	for i := start; i <= end; i++ {
+		swapIndecies(s, i, start)
+		getPermutations(s, m, start+1, end)
+		swapIndecies(s, i, start)
+	}
+}
+
 func getSequences(sequence []int) [][]int {
 	var sequences [][]int
 	seqMap := make(map[string][]int)
+
+	c := make([]int, len(sequence))
+	copy(c, sequence)
+	getPermutations(c, seqMap, 0, len(sequence)-1)
 
 	for _, seq := range seqMap {
 		sequences = append(sequences, seq)
@@ -216,17 +224,22 @@ func getSequences(sequence []int) [][]int {
 func main() {
 	input := []int{3, 8, 1001, 8, 10, 8, 105, 1, 0, 0, 21, 46, 67, 76, 101, 118, 199, 280, 361, 442, 99999, 3, 9, 1002, 9, 4, 9, 1001, 9, 2, 9, 102, 3, 9, 9, 101, 3, 9, 9, 102, 2, 9, 9, 4, 9, 99, 3, 9, 1001, 9, 3, 9, 102, 2, 9, 9, 1001, 9, 2, 9, 1002, 9, 3, 9, 4, 9, 99, 3, 9, 101, 3, 9, 9, 4, 9, 99, 3, 9, 1001, 9, 2, 9, 1002, 9, 5, 9, 101, 5, 9, 9, 1002, 9, 4, 9, 101, 5, 9, 9, 4, 9, 99, 3, 9, 102, 2, 9, 9, 1001, 9, 5, 9, 102, 2, 9, 9, 4, 9, 99, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 99, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 99, 3, 9, 1001, 9, 1, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 1001, 9, 1, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 1001, 9, 1, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 99, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 1001, 9, 1, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 1001, 9, 2, 9, 4, 9, 99, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 1001, 9, 2, 9, 4, 9, 3, 9, 1001, 9, 2, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 99}
 
-	input = []int{3, 15, 3, 16, 1002, 16, 10, 16, 1, 16, 15, 15, 4, 15, 99, 0, 0}
+	// input = []int{3, 15, 3, 16, 1002, 16, 10, 16, 1, 16, 15, 15, 4, 15, 99, 0, 0}
 
 	var state programState
 	sequences := getSequences([]int{0, 1, 2, 3, 4})
 
+	maxFound := math.MinInt64
 	for _, seq := range sequences {
 		for i := 0; i < len(seq); i++ {
 			if i == 0 {
 				state.sysID = []int{seq[i], 0}
 			} else {
 				state.sysID = []int{seq[i], state.output}
+			}
+
+			if maxFound < state.output {
+				maxFound = state.output
 			}
 
 			c := make([]int, len(input))
@@ -238,4 +251,6 @@ func main() {
 
 		fmt.Printf("seq: %v, state.output: %v\n", seq, state.output)
 	}
+
+	fmt.Printf("max found: :%v:\n", maxFound)
 }
