@@ -238,10 +238,6 @@ func main() {
 				state.sysID = []int{seq[i], state.output}
 			}
 
-			if maxFound < state.output {
-				maxFound = state.output
-			}
-
 			c := make([]int, len(input))
 			copy(c, input)
 
@@ -249,8 +245,12 @@ func main() {
 			doInstructions(c, &state)
 		}
 
-		fmt.Printf("seq: %v, state.output: %v\n", seq, state.output)
+		if maxFound < state.output {
+			maxFound = state.output
+		}
+
+		// fmt.Printf("seq: %v, state.output: %v\n", seq, state.output)
 	}
 
-	fmt.Printf("max found: :%v:\n", maxFound)
+	fmt.Printf("max found: %v\n", maxFound)
 }
