@@ -1,3 +1,3 @@
-module fun/aoc
+module github.com/zachblizz/aoc
 
 go 1.13

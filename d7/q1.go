@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	ps "github.com/zachblizz/aoc/utils"
+
 )
 
 // modes
@@ -14,42 +15,18 @@ import (
 // 1 - imediate
 func runInstructions(input []int, opCodes map[string]interface{}, state *ps.ProgramState) int {
 	var output int
-	for state.ip < len(input) && input[state.ip] != 99 {
-		op := input[state.ip]
-		getCurrState(op, state, input)
+	for state.IP < len(input) && input[state.IP] != 99 {
+		op := input[state.IP]
+		state.GetCurrState(op, input)
 
-		if _, ok := opCodes[state.code]; ok {
-			opCodes[state.code].(func([]int))(state, input)
+		if _, ok := opCodes[state.Code]; ok {
+			opCodes[state.Code].(func([]int))(input)
 		} else {
-			state.ip++
+			state.IP++
 		}
 	}
 
 	return output
-}
-
-
-func getCurrState(op int, state *ps.ProgramState, input []int) {
-	strOp := strconv.Itoa(op)
-	state.ClearStateModeAndParams()
-
-	if len(strOp) < 4 {
-		strOp = fmt.Sprintf("%04v", op)
-	}
-
-	c := []rune(strOp)
-	state.code = string(c[2:4])
-
-	state.modeOne, _ = strconv.Atoi(string(c[1:2]))
-	state.modeTwo, _ = strconv.Atoi(string(c[0:1]))
-
-	if state.code == "01" || state.code == "02" || state.code == "07" || state.code == "08" {
-		state.jump = 4
-	} else if state.code == "03" || state.code == "04" {
-		state.jump = 2
-	}
-
-	state.GetParams(input)
 }
 
 func doInstructions(input []int, state *ps.ProgramState) {
@@ -128,9 +105,9 @@ func main() {
 	for _, seq := range sequences {
 		for i := 0; i < len(seq); i++ {
 			if i == 0 {
-				state.sysID = []int{seq[i], 0}
+				state.SysID = []int{seq[i], 0}
 			} else {
-				state.sysID = []int{seq[i], state.output}
+				state.SysID = []int{seq[i], state.Output}
 			}
 
 			c := make([]int, len(input))
@@ -140,11 +117,11 @@ func main() {
 			doInstructions(c, state)
 		}
 
-		if maxFound < state.output {
-			maxFound = state.output
+		if maxFound < state.Output {
+			maxFound = state.Output
 		}
 
-		// fmt.Printf("seq: %v, state.output: %v\n", seq, state.output)
+		// fmt.Printf("seq: %v, state.Output: %v\n", seq, state.Output)
 	}
 
 	fmt.Printf("max found: %v\n", maxFound)
