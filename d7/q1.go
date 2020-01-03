@@ -5,64 +5,21 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+
+	ps "github.com/zachblizz/aoc/IntCodeUtils"
 )
-
-type programState struct {
-	code string // op code
-
-	sysID    []int // system check id
-	sysIDptr int
-
-	ip int // instruction pointer
-	p1 int
-	p2 int
-	p3 int
-
-	modeOne   int
-	modeTwo   int
-	modeThree int
-
-	jump   int
-	output int
-}
-
-func one(state *programState, input []int) {
-	input[state.p3] = state.p1 + state.p2
-	state.ip += state.jump
-}
-
-func two(state *programState, input []int) {
-	input[state.p3] = state.p1 * state.p2
-	state.ip += state.jump
-}
-
-func three(state *programState, input []int) {
-	input[state.p1] = state.sysID[state.sysIDptr]
-	state.sysIDptr++
-	state.ip += state.jump
-}
-
-func four(state *programState, input []int) {
-	if state.p1 < len(input) {
-		state.output = input[state.p1]
-	} else {
-		fmt.Printf("oob error... @ pos %v\n", state.p1)
-		state.output = state.p1
-	}
-	state.ip += state.jump
-}
 
 // modes
 // 0 - position
 // 1 - imediate
-func runInstructions(input []int, opCodes map[string]interface{}, state *programState) int {
+func runInstructions(input []int, opCodes map[string]interface{}, state *ps.ProgramState) int {
 	var output int
 	for state.ip < len(input) && input[state.ip] != 99 {
 		op := input[state.ip]
 		getCurrState(op, state, input)
 
 		if _, ok := opCodes[state.code]; ok {
-			opCodes[state.code].(func(*programState, []int))(state, input)
+			opCodes[state.code].(func([]int))(state, input)
 		} else {
 			state.ip++
 		}
@@ -71,25 +28,10 @@ func runInstructions(input []int, opCodes map[string]interface{}, state *program
 	return output
 }
 
-func clearStateModeAndParams(s *programState) {
-	s.p1 = 0
-	s.p2 = 0
-	s.p3 = 0
-	s.modeOne = 0
-	s.modeTwo = 0
-	s.modeThree = 0
-	s.jump = 3
-}
 
-func resetState(s *programState) {
-	clearStateModeAndParams(s)
-	s.ip = 0
-	s.sysIDptr = 0
-}
-
-func getCurrState(op int, state *programState, input []int) {
+func getCurrState(op int, state *ps.ProgramState, input []int) {
 	strOp := strconv.Itoa(op)
-	clearStateModeAndParams(state)
+	state.ClearStateModeAndParams()
 
 	if len(strOp) < 4 {
 		strOp = fmt.Sprintf("%04v", op)
@@ -107,66 +49,19 @@ func getCurrState(op int, state *programState, input []int) {
 		state.jump = 2
 	}
 
-	getParams(state, input)
+	state.GetParams(input)
 }
 
-func getParams(state *programState, input []int) {
-	if state.code != "09" {
-		state.p1 = input[state.ip+1] // imidiate mode assumed
-
-		if state.code != "03" {
-			state.p2 = input[state.ip+2]
-		}
-
-		if state.code == "01" || state.code == "02" || state.code == "07" || state.code == "08" {
-			state.p3 = input[state.ip+3]
-		}
-	}
-
-	// position mode swap
-	if state.modeOne == 0 && state.code != "03" && state.code != "04" && state.p1 < len(input) {
-		state.p1 = input[state.p1]
-	}
-
-	if state.modeTwo == 0 && state.p2 < len(input) {
-		state.p2 = input[state.p2]
-	}
-}
-
-func doInstructions(input []int, state *programState) {
+func doInstructions(input []int, state *ps.ProgramState) {
 	opCodes := map[string]interface{}{
-		"01": one,
-		"02": two,
-		"03": three,
-		"04": four,
-		"05": func(state *programState, _ []int) {
-			if state.p1 != 0 {
-				state.jump = state.p2 - state.ip
-			}
-			state.ip += state.jump
-		},
-		"06": func(state *programState, _ []int) {
-			if state.p1 == 0 {
-				state.jump = state.p2 - state.ip
-			}
-			state.ip += state.jump
-		},
-		"07": func(state *programState, input []int) {
-			input[state.p3] = 0
-			if state.p1 < state.p2 {
-				input[state.p3] = 1
-			}
-			state.ip += state.jump
-		},
-		"08": func(state *programState, input []int) {
-			if state.p3 < len(input) {
-				input[state.p3] = 0
-				if state.p1 == state.p2 {
-					input[state.p3] = 1
-				}
-			}
-			state.ip += state.jump
-		},
+		"01": state.One,
+		"02": state.Two,
+		"03": state.Three,
+		"04": state.Four,
+		"05": state.Five,
+		"06": state.Six,
+		"07": state.Seven,
+		"08": state.Eight,
 	}
 
 	runInstructions(input, opCodes, state)
@@ -226,7 +121,7 @@ func main() {
 
 	// input = []int{3, 15, 3, 16, 1002, 16, 10, 16, 1, 16, 15, 15, 4, 15, 99, 0, 0}
 
-	var state programState
+	state := ps.NewState()
 	sequences := getSequences([]int{0, 1, 2, 3, 4})
 
 	maxFound := math.MinInt64
@@ -241,8 +136,8 @@ func main() {
 			c := make([]int, len(input))
 			copy(c, input)
 
-			resetState(&state)
-			doInstructions(c, &state)
+			state.ResetState()
+			doInstructions(c, state)
 		}
 
 		if maxFound < state.output {
