@@ -24,6 +24,8 @@ type ProgramState struct {
 
 	Jump   int
 	Output int
+
+	InFeedback int // states if we're in the feedback loop
 }
 
 // One - does the needful for opcode one
