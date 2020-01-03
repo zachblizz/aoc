@@ -6,7 +6,7 @@ import (
 	"math"
 	"strconv"
 
-	ps "github.com/zachblizz/aoc/IntCodeUtils"
+	ps "github.com/zachblizz/aoc/utils"
 )
 
 // modes
