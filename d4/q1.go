@@ -15,34 +15,6 @@ func parseInput(input *string) (int, int) {
 	return min, max
 }
 
-// TODO: account for 244444... and the like
-// func getNumOfDiffs(max, count int, curr []string) int {
-// 	currNum, _ := strconv.Atoi(strings.Join(curr, ""))
-
-// 	if currNum >= max {
-// 		return count
-// 	}
-
-// 	prev, _ := strconv.Atoi(curr[0])
-// 	for i, n := range curr[1:len(curr)] {
-// 		c, _ := strconv.Atoi(string(n))
-
-// 		if c < prev {
-// 			// if this happens mark the rest as prev...
-// 			curr[i+1] = strconv.Itoa(prev)
-// 		} else {
-// 			prev = c
-// 		}
-// 	}
-
-// 	count++
-// 	newNum, _ := strconv.Atoi(strings.Join(curr, ""))
-// 	fmt.Println(newNum)
-// 	newNum++
-
-// 	return getNumOfDiffs(max, count, strings.Split(strconv.Itoa(newNum), ""))
-// }
-
 func getNumOfDiffs(max, min int) int {
 	count := 0
 
