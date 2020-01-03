@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"math"
 
-	ps "github.com/zachblizz/aoc/utils"
+	utils "github.com/zachblizz/aoc/utils"
+
 )
 
 // modes
 // 0 - position
 // 1 - imediate
-func runInstructions(input []int, opCodes map[string]interface{}, state *ps.ProgramState) int {
+func runInstructions(input []int, opCodes map[string]interface{}, state *utils.ProgramState) int {
 	var output int
 	for state.IP < len(input) && input[state.IP] != 99 {
 		op := input[state.IP]
@@ -26,7 +27,7 @@ func runInstructions(input []int, opCodes map[string]interface{}, state *ps.Prog
 	return output
 }
 
-func doInstructions(input []int, state *ps.ProgramState) {
+func doInstructions(input []int, state *utils.ProgramState) {
 	opCodes := map[string]interface{}{
 		"01": state.One,
 		"02": state.Two,
@@ -46,8 +47,8 @@ func main() {
 
 	// input = []int{3, 15, 3, 16, 1002, 16, 10, 16, 1, 16, 15, 15, 4, 15, 99, 0, 0}
 
-	state := ps.NewState()
-	sequences := ps.GetSequences([]int{0, 1, 2, 3, 4})
+	state := utils.NewState()
+	sequences := utils.GetSequences([]int{0, 1, 2, 3, 4})
 
 	maxFound := math.MinInt64
 	for _, seq := range sequences {

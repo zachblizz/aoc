@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"math"
 
-	ps "github.com/zachblizz/aoc/utils"
+	utils "github.com/zachblizz/aoc/utils"
 
 )
 
 // modes
 // 0 - position
 // 1 - imediate
-func runInstructions(input []int, opCodes map[string]interface{}, state *ps.ProgramState) int {
+func runInstructions(input []int, opCodes map[string]interface{}, state *utils.ProgramState) int {
 	var output int
 	for state.IP < len(input) && input[state.IP] != 99 {
 		op := input[state.IP]
@@ -27,11 +27,21 @@ func runInstructions(input []int, opCodes map[string]interface{}, state *ps.Prog
 	return output
 }
 
-func runSequences(opCodes map[string]interface{}, input []int, seq1, seq2 [][]int, state *ps.ProgramState) int {
-	maxFound := math.MinInt64
+func runSequences(opCodes map[string]interface{}, input []int, seq1, seq2 [][]int, state *utils.ProgramState, maxFound *int) {
+	ampMap := map[int]string{
+		0: "A",
+		1: "B",
+		2: "C",
+		3: "D",
+		4: "E",
+	}
+
 	for _, seq := range seq1 {
+		// this runs through A to E for given sequence
 		for i, inputOne := range seq {
-			if i == 0 && state.InFeedback == 0 {
+			if i == 0 && state.SendZeroSignal {
+				// fmt.Println("sending zero signal")
+				state.SendZeroSignal = false
 				state.SysID = []int{inputOne, 0}
 			} else {
 				state.SysID = []int{inputOne, state.Output}
@@ -43,24 +53,29 @@ func runSequences(opCodes map[string]interface{}, input []int, seq1, seq2 [][]in
 			state.ResetState()
 			runInstructions(c, opCodes, state)
 
-			if maxFound < state.Output {
-				maxFound = state.Output
+			if state.LoopMode == 0 {
+				fmt.Printf("amp %v output: %v seq: %v max: %v\n", ampMap[i], state.Output, seq, *maxFound)
 			}
-		}
+		} // state.Output should be from E at this point...
 
-		if state.InFeedback == 1 {
-			return maxFound
+		// here is where we need to switch the loopmode to 1...
+		if state.LoopMode == 0 {
+			fmt.Printf("\n")
+			state.LoopMode = 1
+			runSequences(opCodes, input, seq2, seq1, state, maxFound)
+		} else if *maxFound < state.Output {
+			*maxFound = state.Output
 		}
 	}
-	state.InFeedback = 1
 
-	// feedback loop start...
-	return runSequences(opCodes, input, seq2, seq1, state)
+	state.LoopMode = 0 // reset loop mode
+
+	return // go for the next [0,1,2,3,4] sequence
 }
 
 func main() {
-	state := ps.NewState()
-	state.InFeedback = 0
+	state := utils.NewState()
+	state.LoopMode = 0
 
 	opCodes := map[string]interface{}{
 		"01": state.One,
@@ -75,17 +90,17 @@ func main() {
 
 	input := []int{3, 8, 1001, 8, 10, 8, 105, 1, 0, 0, 21, 46, 67, 76, 101, 118, 199, 280, 361, 442, 99999, 3, 9, 1002, 9, 4, 9, 1001, 9, 2, 9, 102, 3, 9, 9, 101, 3, 9, 9, 102, 2, 9, 9, 4, 9, 99, 3, 9, 1001, 9, 3, 9, 102, 2, 9, 9, 1001, 9, 2, 9, 1002, 9, 3, 9, 4, 9, 99, 3, 9, 101, 3, 9, 9, 4, 9, 99, 3, 9, 1001, 9, 2, 9, 1002, 9, 5, 9, 101, 5, 9, 9, 1002, 9, 4, 9, 101, 5, 9, 9, 4, 9, 99, 3, 9, 102, 2, 9, 9, 1001, 9, 5, 9, 102, 2, 9, 9, 4, 9, 99, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 99, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 99, 3, 9, 1001, 9, 1, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 1001, 9, 1, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 1001, 9, 1, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 99, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 1001, 9, 1, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 1001, 9, 2, 9, 4, 9, 99, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 1001, 9, 2, 9, 4, 9, 3, 9, 1001, 9, 2, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 99}
 
-	input = []int{3, 15, 3, 16, 1002, 16, 10, 16, 1, 16, 15, 15, 4, 15, 99, 0, 0}
-	input = []int{3, 23, 3, 24, 1002, 24, 10, 24, 1002, 23, -1, 23, 101, 5, 23, 23, 1, 24, 23, 23, 4, 23, 99, 0, 0}
-	input = []int{3, 31, 3, 32, 1002, 32, 10, 32, 1001, 31, -2, 31, 1007, 31, 0, 33, 1002, 33, 7, 33, 1, 33, 31, 31, 1, 32, 31, 31, 4, 31, 99, 0, 0, 0}
-
-	// part two
+	// tests
+	// should get - 139629729
 	input = []int{3, 26, 1001, 26, -4, 26, 3, 27, 1002, 27, 2, 27, 1, 27, 26, 27, 4, 27, 1001, 28, -1, 28, 1005, 28, 6, 99, 0, 0, 5}
 
-	sequences := ps.GetSequences([]int{0, 1, 2, 3, 4})
-	sequences2 := ps.GetSequences([]int{5, 6, 7, 8, 9})
+	// input = []int{3, 15, 3, 16, 1002, 16, 10, 16, 1, 16, 15, 15, 4, 15, 99, 0, 0}
 
-	maxFound := runSequences(opCodes, input, sequences, sequences2, state)
+	sequences := utils.GetSequences([]int{0, 1, 2, 3, 4})
+	sequences2 := utils.GetSequences([]int{5, 6, 7, 8, 9})
+	maxFound := math.MinInt64
+
+	runSequences(opCodes, input, sequences, sequences2, state, &maxFound)
 
 	fmt.Printf("max found: %v\n", maxFound)
 }

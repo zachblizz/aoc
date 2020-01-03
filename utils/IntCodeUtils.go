@@ -25,7 +25,9 @@ type ProgramState struct {
 	Jump   int
 	Output int
 
-	InFeedback int // states if we're in the feedback loop
+	LoopMode int // indecates if we're in the feedback loop (0 - orig mode, 1 - feedback mode)
+
+	SendZeroSignal bool
 }
 
 // One - does the needful for opcode one
@@ -42,7 +44,7 @@ func (state *ProgramState) Two(input []int) {
 
 // Three - does the needful for opcode three
 func (state *ProgramState) Three(input []int) {
-	input[state.P1] = state.SysID[state.SysIDptr]
+	input[state.P1] = state.SysID[state.SysIDptr%2]
 	state.SysIDptr++
 	state.IP += state.Jump
 }
@@ -164,6 +166,7 @@ func (state *ProgramState) GetCurrState(op int, input []int) {
 func NewState() *ProgramState {
 	state := ProgramState{}
 	state.ResetState()
+	state.SendZeroSignal = true
 
 	return &state
 }
