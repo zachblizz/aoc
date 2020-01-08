@@ -3,15 +3,14 @@ package utils
 import (
 	"fmt"
 	"strconv"
-
 )
 
 // ProgramState - the state of the intcode program
 type ProgramState struct {
 	Code string // op code
 
-	SysID    []int // system check id
-	SysIDptr int
+	InputIns    []int // input instructions
+	InputInsPtr int
 
 	IP int // instruction pointer
 	P1 int
@@ -28,6 +27,8 @@ type ProgramState struct {
 	LoopMode int // indecates if we're in the feedback loop (0 - orig mode, 1 - feedback mode)
 
 	SendZeroSignal bool
+
+	Halted bool
 }
 
 // One - does the needful for opcode one
@@ -44,8 +45,8 @@ func (state *ProgramState) Two(input []int) {
 
 // Three - does the needful for opcode three
 func (state *ProgramState) Three(input []int) {
-	input[state.P1] = state.SysID[state.SysIDptr%2]
-	state.SysIDptr++
+	input[state.P1] = state.InputIns[state.InputInsPtr%2]
+	state.InputInsPtr++
 	state.IP += state.Jump
 }
 
@@ -98,20 +99,22 @@ func (state *ProgramState) Eight(input []int) {
 
 // ClearStateModeAndParams - clears the modes and params
 func (state *ProgramState) ClearStateModeAndParams() {
+	state.Code = ""
 	state.P1 = 0
 	state.P2 = 0
 	state.P3 = 0
 	state.ModeOne = 0
 	state.ModeTwo = 0
 	state.ModeThree = 0
+	state.Halted = false
 	state.Jump = 3
 }
 
-// ResetState - resets the instruction pointer and the SysIDPtr
+// ResetState - resets the instruction pointer and the InputInsPtr
 func (state *ProgramState) ResetState() {
 	state.ClearStateModeAndParams()
 	state.IP = 0
-	state.SysIDptr = 0
+	state.InputInsPtr = 0
 }
 
 // GetParams - gets the input params (P1,2,3)

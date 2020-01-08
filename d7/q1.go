@@ -5,17 +5,19 @@ import (
 	"math"
 
 	utils "github.com/zachblizz/aoc/utils"
-
 )
 
 // modes
 // 0 - position
 // 1 - imediate
-func runInstructions(input []int, opCodes map[string]interface{}, state *utils.ProgramState) int {
-	var output int
-	for state.IP < len(input) && input[state.IP] != 99 {
+func runInstructions(input []int, opCodes map[string]interface{}, state *utils.ProgramState) {
+	for state.IP < len(input) {
 		op := input[state.IP]
 		state.GetCurrState(op, input)
+
+		if state.Code == "99" {
+			return
+		}
 
 		if _, ok := opCodes[state.Code]; ok {
 			opCodes[state.Code].(func([]int))(input)
@@ -23,8 +25,6 @@ func runInstructions(input []int, opCodes map[string]interface{}, state *utils.P
 			state.IP++
 		}
 	}
-
-	return output
 }
 
 func doInstructions(input []int, state *utils.ProgramState) {
