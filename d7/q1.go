@@ -5,6 +5,7 @@ import (
 	"math"
 
 	utils "github.com/zachblizz/aoc/utils"
+
 )
 
 // modes
@@ -54,9 +55,9 @@ func main() {
 	for _, seq := range sequences {
 		for i := 0; i < len(seq); i++ {
 			if i == 0 {
-				state.SysID = []int{seq[i], 0}
+				state.InputIns = []int{seq[i], 0}
 			} else {
-				state.SysID = []int{seq[i], state.Output}
+				state.InputIns = []int{seq[i], state.Output}
 			}
 
 			c := make([]int, len(input))
