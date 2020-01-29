@@ -5,12 +5,13 @@ import (
 	"math"
 
 	utils "github.com/zachblizz/aoc/utils"
+
 )
 
 // modes
 // 0 - position
 // 1 - imediate
-func runInstructions(input []int, opCodes map[string]interface{}, state *utils.ProgramState) {
+func runInstructions(input []int, state *utils.ProgramState) {
 	for state.IP < len(input) {
 		op := input[state.IP]
 		state.GetCurrState(op, input)
@@ -19,8 +20,8 @@ func runInstructions(input []int, opCodes map[string]interface{}, state *utils.P
 			return
 		}
 
-		if _, ok := opCodes[state.Code]; ok {
-			opCodes[state.Code].(func([]int))(input)
+		if _, ok := state.OpCodes[state.Code]; ok {
+			state.OpCodes[state.Code].(func([]int))(input)
 		} else {
 			state.IP++
 		}
@@ -28,18 +29,7 @@ func runInstructions(input []int, opCodes map[string]interface{}, state *utils.P
 }
 
 func doInstructions(input []int, state *utils.ProgramState) {
-	opCodes := map[string]interface{}{
-		"01": state.One,
-		"02": state.Two,
-		"03": state.Three,
-		"04": state.Four,
-		"05": state.Five,
-		"06": state.Six,
-		"07": state.Seven,
-		"08": state.Eight,
-	}
-
-	runInstructions(input, opCodes, state)
+	runInstructions(input, state)
 }
 
 func main() {
@@ -47,16 +37,16 @@ func main() {
 
 	// input = []int{3, 15, 3, 16, 1002, 16, 10, 16, 1, 16, 15, 15, 4, 15, 99, 0, 0}
 
-	state := utils.NewState()
+	state := utils.NewState(nil, "INIT")
 	sequences := utils.GetSequences([]int{0, 1, 2, 3, 4})
 
 	maxFound := math.MinInt64
 	for _, seq := range sequences {
 		for i := 0; i < len(seq); i++ {
 			if i == 0 {
-				state.SysID = []int{seq[i], 0}
+				state.InputIns = []int{seq[i], 0}
 			} else {
-				state.SysID = []int{seq[i], state.Output}
+				state.InputIns = []int{seq[i], state.Output}
 			}
 
 			c := make([]int, len(input))

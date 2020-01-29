@@ -3,11 +3,13 @@ package utils
 import (
 	"fmt"
 	"strconv"
+
 )
 
 // ProgramState - the state of the intcode program
 type ProgramState struct {
-	Code string // op code
+	Code    string // op code
+	AmpName string // the name of the current amp....
 
 	InputIns    []int // input instructions
 	InputInsPtr int
@@ -28,7 +30,7 @@ type ProgramState struct {
 
 	SendZeroSignal bool
 
-	Halted bool
+	OpCodes map[string]interface{}
 }
 
 // One - does the needful for opcode one
@@ -106,7 +108,6 @@ func (state *ProgramState) ClearStateModeAndParams() {
 	state.ModeOne = 0
 	state.ModeTwo = 0
 	state.ModeThree = 0
-	state.Halted = false
 	state.Jump = 3
 }
 
@@ -166,8 +167,19 @@ func (state *ProgramState) GetCurrState(op int, input []int) {
 }
 
 // NewState - creates a ProgramState pointer
-func NewState() *ProgramState {
-	state := ProgramState{}
+func NewState(ins []int, ampName string) *ProgramState {
+	state := ProgramState{InputIns: ins, AmpName: ampName}
+	state.OpCodes = map[string]interface{}{
+		"01": state.One,
+		"02": state.Two,
+		"03": state.Three,
+		"04": state.Four,
+		"05": state.Five,
+		"06": state.Six,
+		"07": state.Seven,
+		"08": state.Eight,
+	}
+
 	state.ResetState()
 	state.SendZeroSignal = true
 

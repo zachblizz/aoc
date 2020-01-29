@@ -5,32 +5,30 @@ import (
 	"math"
 
 	utils "github.com/zachblizz/aoc/utils"
+
 )
 
 // modes
 // 0 - position
 // 1 - imediate
-func runInstructions(input []int, opCodes map[string]interface{}, state *utils.ProgramState) {
+func runInstructions(input []int, state *utils.ProgramState) {
 	for state.IP < len(input) {
 		op := input[state.IP]
 		state.GetCurrState(op, input)
 
 		if state.Code == "99" {
-			state.Halted = true
-			return
+			break
 		}
 
-		if _, ok := opCodes[state.Code]; ok {
-			opCodes[state.Code].(func([]int))(input)
+		if _, ok := state.OpCodes[state.Code]; ok {
+			state.OpCodes[state.Code].(func([]int))(input)
 		} else {
 			state.IP++
 		}
 	}
 }
 
-func runSequences(opCodes map[string]interface{}, input []int,
-	sequence [][]int, state *utils.ProgramState, maxFound *int) {
-
+func runSequences(input []int, seq []int) int {
 	ampNames := map[int]string{
 		0: "A",
 		1: "B",
@@ -39,53 +37,48 @@ func runSequences(opCodes map[string]interface{}, input []int,
 		4: "E",
 	}
 
-	for _, seq := range sequence {
-		// this runs through A to E for given sequence
-		for amp, inputOne := range seq {
-			if amp == 0 && state.SendZeroSignal {
-				fmt.Printf("initial amp, passing input signals [%v, 0]\n", inputOne)
-				state.InputIns = []int{inputOne, 0}
-				state.SendZeroSignal = false
-			} else {
-				ampName := ampNames[amp-1]
-				if ampName == "" {
-					ampName = "A"
-				}
+	states := []*utils.ProgramState{}
+	output := 0
 
-				fmt.Printf("amp %v's output: %v, which is amp %v's input\n", ampName, state.Output, ampNames[amp])
-				fmt.Printf("input signals: [%v, %v]\n", inputOne, state.Output)
-				state.InputIns = []int{inputOne, state.Output}
+	for amp, inputOne := range seq {
+		inputs := []int{inputOne}
+		if amp == 0 {
+			inputs = append(inputs, 0)
+		}
+
+		states = append(states, utils.NewState(inputs, ampNames[amp]))
+	}
+
+	fmt.Println("starting the loop...")
+
+	prevState := utils.NewState(nil, "firstPrev")
+
+	for prevState.Code != "99" {
+		for _, currState := range states {
+			fmt.Println("new state about to start...", currState.AmpName)
+			if prevState.Output != 0 {
+				// fmt.Printf("we have a prev state amp[%v] and it's output is: %v\n", prevState.AmpName, prevState.Output)
+				currState.InputIns = append(currState.InputIns, prevState.Output)
 			}
 
-			c := make([]int, len(input))
-			copy(c, input)
+			for currState.Code != "99" {
+				c := make([]int, len(input))
+				copy(c, input)
 
-			state.ResetState()
-			runInstructions(c, opCodes, state)
-		} // state.Output should be from E at this point...
+				runInstructions(c, currState)
+				fmt.Printf("name: %v currState.output = %v\n", currState.AmpName, currState.Output)
+				output = currState.Output
+			}
 
-		if *maxFound < state.Output {
-			fmt.Printf("prevmax: %v;  new max: %v\n", *maxFound, state.Output)
-			*maxFound = state.Output
+			prevState = currState
 		}
+
 	}
+
+	return output
 }
 
 func main() {
-	state := utils.NewState()
-	state.LoopMode = 0
-
-	opCodes := map[string]interface{}{
-		"01": state.One,
-		"02": state.Two,
-		"03": state.Three,
-		"04": state.Four,
-		"05": state.Five,
-		"06": state.Six,
-		"07": state.Seven,
-		"08": state.Eight,
-	}
-
 	input := []int{3, 8, 1001, 8, 10, 8, 105, 1, 0, 0, 21, 46, 67, 76, 101, 118, 199, 280, 361, 442, 99999, 3, 9, 1002, 9, 4, 9, 1001, 9, 2, 9, 102, 3, 9, 9, 101, 3, 9, 9, 102, 2, 9, 9, 4, 9, 99, 3, 9, 1001, 9, 3, 9, 102, 2, 9, 9, 1001, 9, 2, 9, 1002, 9, 3, 9, 4, 9, 99, 3, 9, 101, 3, 9, 9, 4, 9, 99, 3, 9, 1001, 9, 2, 9, 1002, 9, 5, 9, 101, 5, 9, 9, 1002, 9, 4, 9, 101, 5, 9, 9, 4, 9, 99, 3, 9, 102, 2, 9, 9, 1001, 9, 5, 9, 102, 2, 9, 9, 4, 9, 99, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 99, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 99, 3, 9, 1001, 9, 1, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 1001, 9, 1, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 1001, 9, 1, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 99, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 1001, 9, 1, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 1001, 9, 2, 9, 4, 9, 99, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 102, 2, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 101, 1, 9, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 1001, 9, 2, 9, 4, 9, 3, 9, 1001, 9, 2, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 3, 9, 1002, 9, 2, 9, 4, 9, 3, 9, 101, 2, 9, 9, 4, 9, 99}
 
 	// tests
@@ -96,7 +89,14 @@ func main() {
 
 	sequences := utils.GetSequences([]int{5, 6, 7, 8, 9})
 	maxFound := math.MinInt64
+	fmt.Println(len(sequences))
+	for _, seq := range sequences {
+		output := runSequences(input, seq)
 
-	runSequences(opCodes, input, sequences, state, &maxFound)
+		if output > maxFound {
+			maxFound = output
+		}
+	}
+
 	fmt.Printf("max found: %v\n", maxFound)
 }
