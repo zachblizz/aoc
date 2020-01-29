@@ -17,7 +17,7 @@ func runInstructions(input []int, state *utils.ProgramState) {
 		state.GetCurrState(op, input)
 
 		if state.Code == "99" {
-			return
+			break
 		}
 
 		if _, ok := state.OpCodes[state.Code]; ok {
@@ -55,8 +55,9 @@ func runSequences(input []int, seq []int) int {
 
 	for prevState.Code != "99" {
 		for _, currState := range states {
+			fmt.Println("new state about to start...", currState.AmpName)
 			if prevState.Output != 0 {
-				fmt.Printf("we have a prev state amp[%v] and it's output is: %v\n", prevState.AmpName, prevState.Output)
+				// fmt.Printf("we have a prev state amp[%v] and it's output is: %v\n", prevState.AmpName, prevState.Output)
 				currState.InputIns = append(currState.InputIns, prevState.Output)
 			}
 
@@ -65,6 +66,7 @@ func runSequences(input []int, seq []int) int {
 				copy(c, input)
 
 				runInstructions(c, currState)
+				fmt.Printf("name: %v currState.output = %v\n", currState.AmpName, currState.Output)
 				output = currState.Output
 			}
 
@@ -87,7 +89,7 @@ func main() {
 
 	sequences := utils.GetSequences([]int{5, 6, 7, 8, 9})
 	maxFound := math.MinInt64
-
+	fmt.Println(len(sequences))
 	for _, seq := range sequences {
 		output := runSequences(input, seq)
 
