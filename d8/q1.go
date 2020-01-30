@@ -9,6 +9,13 @@ import (
 
 )
 
+// color distinction
+const (
+	black       = 0
+	white       = 1
+	transparent = 2
+)
+
 func getDim(dim string) (int, int) {
 	s := strings.Split(dim, "x")
 	x, _ := strconv.Atoi(s[0])
@@ -17,7 +24,7 @@ func getDim(dim string) (int, int) {
 	return x, y
 }
 
-func createLayers(input, dim string) ([][]int, int) {
+func createLayers(input, dim string) ([][]int, int, int) {
 	x, y := getDim(dim)
 	layers := [][]int{}
 	l := 0
@@ -35,7 +42,7 @@ func createLayers(input, dim string) ([][]int, int) {
 		}
 	}
 
-	return layers, y
+	return layers, x, y
 }
 
 func printLayers(layers [][]int, tall int) {
@@ -107,15 +114,44 @@ func calculateOnesAndToos(layers [][]int, tall, smallestLayer int) int {
 	return histo[1] * histo[2]
 }
 
+func drawPixels(layers [][]int, x, y int) [][]int {
+	pixels := make([][]int, y)
+
+	// initialize all pixel rows with -1
+	for i := 0; i < y; i++ {
+		pixels[i] = []int{}
+
+		for j := 0; j < x; j++ {
+			pixels[i] = append(pixels[i], -1)
+		}
+	}
+
+	layer := 0
+	for i, pRow := range layers {
+		layer = i % y
+		for j, pc := range pRow {
+			if pixels[layer][j] == -1 || pixels[layer][j] == transparent {
+				pixels[layer][j] = pc
+			}
+		}
+	}
+
+	return pixels
+}
+
 func main() {
 	input, _ := ioutil.ReadFile("input.txt")
 	dim := "25x6"
 
+	// input := "0222112222120000"
+	// dim = "2x2"
+
 	// 25x6 image
 	// layer consists of 6 rows with 25 numbers in them
-	layers, tall := createLayers(string(input), dim)
-	printLayers(layers, tall)
-	// smallestLayer := getSmallestLayer(layers, tall)
-	// fmt.Println(calculateOnesAndToos(layers, tall, smallestLayer))
+	layers, x, y := createLayers(string(input), dim)
+	// printLayers(layers, y)
+	// smallestLayer := getSmallestLayer(layers, y)
+	// fmt.Println(calculateOnesAndToos(layers, y, smallestLayer))
 
+	printLayers(drawPixels(layers, x, y), y)
 }
