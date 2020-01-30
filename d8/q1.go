@@ -117,12 +117,12 @@ func calculateOnesAndToos(layers [][]int, tall, smallestLayer int) int {
 func drawPixels(layers [][]int, x, y int) [][]int {
 	pixels := make([][]int, y)
 
-	// initialize all pixel rows with -1
+	// initialize all pixel rows with transparent
 	for i := 0; i < y; i++ {
 		pixels[i] = []int{}
 
 		for j := 0; j < x; j++ {
-			pixels[i] = append(pixels[i], -1)
+			pixels[i] = append(pixels[i], transparent)
 		}
 	}
 
@@ -130,7 +130,7 @@ func drawPixels(layers [][]int, x, y int) [][]int {
 	for i, pRow := range layers {
 		layer = i % y
 		for j, pc := range pRow {
-			if pixels[layer][j] == -1 || pixels[layer][j] == transparent {
+			if pixels[layer][j] == transparent {
 				pixels[layer][j] = pc
 			}
 		}
