@@ -6,47 +6,56 @@ import (
 )
 
 func main() {
-	input := utils.ReadFile("input.txt")
-	partOne(input)
+	input := utils.ReadFile("sample.txt")
+	// partOne(input)
+	partTwo(input)
 }
 
 func partOne(input *[]string) {
-	// key - ans, val - map -> key - idx, val - doesn't matter
-	m := make(map[rune]map[int]int)
+	m := make(map[rune]int)
 	ret := 0
 
 	for _, r := range *input {
 		if r == "" {
-			fmt.Print("ques:")
-			for v := range m {
-				fmt.Printf(" %v", string(v))
-			}
-			fmt.Println()
-
-			m = make(map[rune]map[int]int)
+			m = make(map[rune]int)
 		}
 
-		for idx, ans := range r {
-			idxM, ok := m[ans]
-			_, idxOk := idxM[idx]
-
-			if !ok || !idxOk {
+		for _, ans := range r {
+			if _, ok := m[ans]; !ok {
 				ret++
+				m[ans] = 1
+			}
+		}
+	}
 
-				if !ok {
-					m[ans] = map[int]int{idx: 1}
-				} else {
-					m[ans][idx] = 1
+	fmt.Println(ret)
+}
+
+func partTwo(input *[]string) {
+	m := make(map[rune]int)
+	ret := 0
+	groupCount := 0
+
+	for _, r := range *input {
+		if r == "" {
+			for _, v := range m {
+				if v == groupCount {
+					ret++
 				}
 			}
+
+			m = make(map[rune]int)
+			groupCount = 0
+		}
+
+		groupCount++
+
+		for _, ans := range r {
+			if _, ok := m[ans]; !ok {
+				m[ans] = 1
+			}
 		}
 	}
-
-	fmt.Print("ques:")
-	for v := range m {
-		fmt.Printf(" %v", string(v))
-	}
-	fmt.Println()
 
 	fmt.Println(ret)
 }
