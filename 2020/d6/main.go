@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	input := utils.ReadFile("sample.txt")
+	input := utils.ReadFile("input.txt")
 	// partOne(input)
 	partTwo(input)
 }
@@ -39,21 +39,26 @@ func partTwo(input *[]string) {
 	for _, r := range *input {
 		if r == "" {
 			for _, v := range m {
-				if v == groupCount {
+				if v >= groupCount {
 					ret++
 				}
 			}
 
 			m = make(map[rune]int)
 			groupCount = 0
+		} else {
+			groupCount++
 		}
 
-		groupCount++
-
 		for _, ans := range r {
-			if _, ok := m[ans]; !ok {
-				m[ans] = 1
-			}
+			m[ans]++
+		}
+	}
+
+
+	for _, v := range m {
+		if v >= groupCount {
+			ret++
 		}
 	}
 
