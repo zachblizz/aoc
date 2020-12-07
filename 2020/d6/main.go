@@ -11,31 +11,42 @@ func main() {
 }
 
 func partOne(input *[]string) {
-	m := make(map[rune]int)
-	final := 0
-	sum := 0
+	// key - ans, val - map -> key - idx, val - doesn't matter
+	m := make(map[rune]map[int]int)
+	ret := 0
 
 	for _, r := range *input {
 		if r == "" {
-			m = make(map[rune]int)
-			final += sum
-			sum = 0
+			fmt.Print("ques:")
+			for v := range m {
+				fmt.Printf(" %v", string(v))
+			}
+			fmt.Println()
+
+			m = make(map[rune]map[int]int)
 		}
 
-		for _, ans := range r {
-			if _, ok := m[ans]; !ok && isAnswerValid(ans) {
-				sum++
-				m[ans] = 1
+		for idx, ans := range r {
+			idxM, ok := m[ans]
+			_, idxOk := idxM[idx]
+
+			if !ok || !idxOk {
+				ret++
+
+				if !ok {
+					m[ans] = map[int]int{idx: 1}
+				} else {
+					m[ans][idx] = 1
+				}
 			}
 		}
 	}
 
-	fmt.Println(final + sum)
-}
+	fmt.Print("ques:")
+	for v := range m {
+		fmt.Printf(" %v", string(v))
+	}
+	fmt.Println()
 
-func isAnswerValid(ans rune) bool {
-	aToC := ans >= 'a' && ans <= 'c'
-	xToZ := ans >= 'x' && ans <= 'z'
-
-	return aToC || xToZ
+	fmt.Println(ret)
 }
