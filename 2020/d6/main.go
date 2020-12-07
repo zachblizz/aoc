@@ -38,11 +38,7 @@ func partTwo(input *[]string) {
 
 	for _, r := range *input {
 		if r == "" {
-			for _, v := range m {
-				if v >= groupCount {
-					ret++
-				}
-			}
+			calcAnswers(m, &ret, &groupCount)
 
 			m = make(map[rune]int)
 			groupCount = 0
@@ -55,12 +51,14 @@ func partTwo(input *[]string) {
 		}
 	}
 
+	calcAnswers(m, &ret, &groupCount)
+	fmt.Println(ret)
+}
 
+func calcAnswers(m map[rune]int, ret, groupCount *int) {
 	for _, v := range m {
-		if v >= groupCount {
-			ret++
+		if v >= *groupCount {
+			*ret++
 		}
 	}
-
-	fmt.Println(ret)
 }
